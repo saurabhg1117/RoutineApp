@@ -1,0 +1,101 @@
+workflows:
+  android-workflow:
+    name: Android Workflow
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    environment:
+      groups:
+        - keystore_credentials
+      vars:
+        PACKAGE_NAME: "com.goldapp.daily_routine"
+        APP_NAME: "Gold App"
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter dependencies
+        script: |
+          flutter pub get
+      - name: Generate Hive adapters
+        script: |
+          flutter pub run build_runner build --delete-conflicting-outputs
+      - name: Flutter analyze
+        script: |
+          flutter analyze || true
+      - name: Flutter test
+        script: |
+          flutter test || true
+      - name: Setup keystore
+        script: |
+          if [ -n "$CM_KEYSTORE_PATH" ]; then
+            echo "Keystore found, setting up signing..."
+            keytool -list -v -keystore "$CM_KEYSTORE_PATH" -alias "$CM_KEY_ALIAS" -storepass "$CM_KEYSTORE_PASSWORD" -keypass "$CM_KEY_PASSWORD" || true
+          else
+            echo "No keystore found, using debug signing..."
+          fi
+      - name: Build Android App Bundle
+        script: |
+          flutter build appbundle --release
+    artifacts:
+      - build/**/outputs/**/*.aab
+      - build/**/outputs/**/mapping.txt
+    publishing:
+      email:
+        recipients:
+          - user@example.com
+        notify:
+          success: true
+          failure: false
+      scripts:
+        - name: Upload to Google Play
+          script: |
+            # Uncomment and configure if you want to publish to Google Play
+            # fastlane android deploy
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: alpha
+        # Uncomment when ready to publish
+        # submit_as_draft: false
+
+  android-apk-workflow:
+    name: Android APK Workflow
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    environment:
+      groups:
+        - keystore_credentials
+      vars:
+        PACKAGE_NAME: "com.goldapp.daily_routine"
+        APP_NAME: "Gold App"
+      flutter: stable
+    scripts:
+      - name: Get Flutter dependencies
+        script: |
+          flutter pub get
+      - name: Generate Hive adapters
+        script: |
+          flutter pub run build_runner build --delete-conflicting-outputs
+      - name: Flutter analyze
+        script: |
+          flutter analyze || true
+      - name: Setup keystore
+        script: |
+          if [ -n "$CM_KEYSTORE_PATH" ]; then
+            echo "Keystore found, setting up signing..."
+            keytool -list -v -keystore "$CM_KEYSTORE_PATH" -alias "$CM_KEY_ALIAS" -storepass "$CM_KEYSTORE_PASSWORD" -keypass "$CM_KEY_PASSWORD" || true
+          else
+            echo "No keystore found, using debug signing..."
+          fi
+      - name: Build Android APK
+        script: |
+          flutter build apk --release
+    artifacts:
+      - build/**/outputs/**/*.apk
+    publishing:
+      email:
+        recipients:
+          - user@example.com
+        notify:
+          success: true
+          failure: false
+
