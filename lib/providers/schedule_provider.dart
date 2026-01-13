@@ -69,6 +69,24 @@ class ScheduleProvider with ChangeNotifier {
     return _schedules.where((s) => s.type == 'Job').toList();
   }
 
+  List<ScheduleItem> getJobSchedulesForWeek() {
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+    final weekEnd = weekStart.add(const Duration(days: 6));
+    
+    return _schedules.where((s) {
+      if (s.type != 'Job') return false;
+      return s.date.isAfter(weekStart.subtract(const Duration(days: 1))) &&
+          s.date.isBefore(weekEnd.add(const Duration(days: 1)));
+    }).toList();
+  }
+
+  List<ScheduleItem> getWeekendJobSchedules() {
+    return _schedules.where((s) {
+      return s.type == 'Job' && s.isWeekend;
+    }).toList();
+  }
+
   List<ScheduleItem> getStudySchedules() {
     return _schedules.where((s) => s.type == 'Study').toList();
   }

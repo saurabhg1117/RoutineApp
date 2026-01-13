@@ -37,6 +37,9 @@ class ScheduleItem extends HiveObject {
   @HiveField(10)
   DateTime updatedAt;
 
+  @HiveField(11)
+  bool isOptional;
+
   ScheduleItem({
     required this.id,
     required this.type,
@@ -49,6 +52,7 @@ class ScheduleItem extends HiveObject {
     this.reminderTime,
     required this.createdAt,
     required this.updatedAt,
+    this.isOptional = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -64,6 +68,7 @@ class ScheduleItem extends HiveObject {
       'reminderTime': reminderTime?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'isOptional': isOptional,
     };
   }
 
@@ -82,7 +87,12 @@ class ScheduleItem extends HiveObject {
           : null,
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
+      isOptional: json['isOptional'] ?? false,
     );
+  }
+
+  bool get isWeekend {
+    return date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
   }
 }
 
